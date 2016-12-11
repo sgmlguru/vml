@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://docbook.org/xml/5.0/rng/docbookxi.rng" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://docbook.org/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<article xmlns="http://docbook.org/ns/docbook"
+        xmlns:xi="http://www.w3.org/2001/XInclude"
+        xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0">
+    <info>
+        <title>Virtual Document Management</title>
+        <author>
+            <personname><firstname>Ari</firstname><surname>Nordström</surname></personname>
+            <email>ari.nordstrom@gmail.com</email>
+        </author>
+    </info>
+    <section>
+        <title>Introduction</title>
+        <para>The idea to this paper originated partly from an earlier one I wrote for Balisage, and
+            partly from the very real needs of a client. The Balisage paper was all about
+            introducing a version management layer on top of the eXist-DB XML database's rather
+            crude versioning module, to provide the principles of versioning management capable of
+            separating the unnecessary versions that would happen whenever saving a document from
+            the meaningful ones; very quickly there will be lots of versions of which most are of
+            little interest later.</para>
+        <para>The significant versions, therefore, will be very difficult to find, severely limiting
+            the usability of the module.</para>
+        <para>My client's needs, on the other hand, center on no real version management to begin
+            with. The document editing and publishing workflow would perhaps be best described as
+                <quote>distributed</quote>, comprising several systems between which a document
+            would be sent on its way to being published in one or more of the multitude of systems
+            outputting the content<footnote>
+                <para>The systems range from several editing environments to a complex, multi-step
+                    publishing chain that enriches and converts the informationending with several
+                    different legacy output systems as well as a brand new one being
+                    developed.</para>
+            </footnote>. The problem here is that there is no single source system, no central
+            system in control. Once published, there is no way to reliably trace a publication to
+            its source to determine if there is a later and updated version of that document.</para>
+        <section>
+            <title>Version Management Concepts</title>
+            <itemizedlist>
+                <para>While this is not the place to offer a detailed discussion of version
+                    management basics, it is nevertheless important to introduce and define a few
+                    key concepts. None of these is new or original, but since the definitions and
+                    their use vary depending on whom you ask, I will offer mine here:</para>
+                <listitem>
+                    <para>Anything can be versioned. Here, I will mostly infer XML documents, but
+                        the paper applies to every kind of content.</para>
+                </listitem>
+                <listitem>
+                    <para>A new version happens when there is a significant change to the old. What
+                            <quote>significant</quote> means may vary, of course, but at the core we
+                        are talking about any kind of change to the information content or
+                        structure. A spelling fix is an update, as is, of course, a reorganisation
+                        of a section or an added paragraph.</para>
+                </listitem>
+                <listitem>
+                    <para>Two different translations should not be seen as separate versions but
+                        rather different renditions of the same basic document, much like GIF or JPG
+                        renditions of an image.</para>
+                </listitem>
+                <listitem>
+                    <para>Nor should two different output formats of the same document (say, PDF and
+                        HTML) be seen as different versions. There might be good reasons to keep
+                        track of them, but if their contents are the same, presentation should not
+                        matter when determining their version.</para>
+                </listitem>
+                <listitem>
+                    <para>Moving a document along document workflow stages (for example,
+                            <quote>editing</quote>, <quote>reviewing</quote>,
+                            <quote>translated</quote>, <quote>approved</quote> or
+                            <quote>published</quote> should not automatically result in new
+                        versions. A document could easily pass through them all without a single
+                        change; on the other hand, multiple versions might be required for a single
+                        stage such as <quote>editing</quote>. Therefore, <emphasis>workflow
+                            handling, including lifecycle handling, should be kept separate from
+                            version handling.</emphasis></para>
+                </listitem>
+                <listitem>
+                    <para>Links, from paper-cross-references to hyperlinks, images or content
+                        inclusions, should include the exact version and rendition<footnote>
+                            <para>Meaning translation and, when relevant, the presentation.</para>
+                        </footnote> of the target.</para>
+                </listitem>
+                <listitem>
+                    <para>Version <emphasis>labels</emphasis> are just that, labels. They help
+                        readability but are not in themselves important. At their core, they are
+                        simply numerals starting from 1.</para>
+                    <para>Importance can be attached to them by introducing various business rules;
+                        usually, the business rules help clarify workflow and lifecycle stages. For
+                        example, <quote>1.0</quote> will frequently represent an approved and
+                        published version (implying that <quote>0.9</quote> is a draft),
+                            <quote>1.1</quote> a derivative of that version, usually without any
+                        major changes to functionality, and so on.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section>
+            <title>The Semantic Document</title>
+            <para>Following my definitions, above, I would like to very briefly discuss the
+                identification of documents, or more generically, resources.</para>
+            <para>A filename is seldom unique or usable as a document identifier, so it is useful to
+                create an abstraction for the document ID. Me, I'm partial to URNs, as they are
+                straight-forward to use when implementing the above while allowing one to retain
+                some of the readability of a filename.</para>
+            <para>Imagine a <quote>document</quote> as a container of information about some
+                subject. A base version of that document, disregarding versioning, workflow,
+                presentation or language, might be identified as follows:</para>
+            <programlisting>urn:x-myurn-ns:r1:mydocs:00001</programlisting>
+            <para>What I'm saying here is simply that my document is, in this URN namespace,
+                uniquely identified as <quote>mydocs:00001</quote>. It's an abstract document and
+                only identifies the actual information, the document semantics. Adding a rendition
+                language to the identifier could then be done like this:</para>
+            <programlisting>urn:x-myurn-ns:r1:mydocs:00001:en-GB</programlisting>
+            <para>This says that this particular rendition of the contents is in British
+                English.</para>
+            <para>Documents change over time, however, so to track that change, we introduce an a
+                version label to the identifier:</para>
+            <programlisting>urn:x-myurn-ns:r1:mydocs:00001:en-GB:1</programlisting>
+            <para>Now, we can reliably track change to the document:</para>
+            <programlisting>urn:x-myurn-ns:r1:mydocs:00001:en-GB:1
+urn:x-myurn-ns:r1:mydocs:00001:en-GB:2
+urn:x-myurn-ns:r1:mydocs:00001:en-GB:3
+...</programlisting>
+            <para>And if a version 10, say, was finally approved, we could translate that version to
+                Finnish and identify the translation like so:</para>
+            <programlisting>urn:x-myurn-ns:r1:mydocs:00001:fi-FI:10</programlisting>
+            <para>If accepting the concepts as outlined here, it follows that this Finnish
+                translation is identical to the British English
+                    <code>urn:x-myurn-ns:r1:mydocs:00001:en-GB:10</code> document.</para>
+        </section>
+    </section>
+    <section>
+        <title>The Problem</title>
+        <para>So, the problem in a nutshell: </para>
+        <para>Large numbers of XML documents are created, edited and published without a single,
+            central source or proper version handling. Instead, they are moved from one system to
+            another in a complex and multi-ended publishing chain, where no single system has
+            control over a document in the sense that it can control an identifier namespace and
+            uniquely identify a document passing through a step as the same one that went through an
+            earlier step.</para>
+        <!--Illustration of systems, crisscross of information-->
+        <para>The various systems can be seen as a pipeline of loosely connected black boxes where
+            the information is enriched and converted to other formats, eventually being published
+            in Word ML on a customer PC or as content in a system intended to eventually be used as
+            a central repository. </para>
+        <para>The individual steps have control over the content while inside the black box
+            representing the current step, but usually there is no way to query or track the content
+            before or after the step. They tend to be fetched from a shared folder and delivered to
+            another, and so there is no way to reliably track a single document through the
+            publishing
+            chain.<!-- It is not possible to reliably determine, based on a published document, if a later version with updated information exists of that document (such as a Word ML document on a customer's local hard disk) or what those changes are.--></para>
+        <para>Yet, this is exactly what is required by the business; it must be possible to trace a
+            document back to the previous steps, including the source, to find out if a later
+            version exists, and what the changes are.</para>
+        <para>Yet, many steps along the way have some degree of control over the document
+                <emphasis>within that step</emphasis>. For example, most first steps in the chain<footnote>
+                <para>Plural form; we are talking about several authoring systems.</para>
+            </footnote>, where documents are authored, are database-driven. There is no actual
+            versioning--a change to an existing document is done directly to that document so no old
+            version is ever kept--but the system knows what changes are done to what document. It's
+            just that no other later step, no black box in the publishing chain, can access or keep
+            track of that information.</para>
+        <para>While I would usually suggest introducing a single-source document management system
+            to handle the situation - something that can uniquely identify and version handle every
+            piece of content, and introduce workflows and steps to maintain complete control over
+            the document throughout the publishing chain - this is, for various reasons, not
+            feasible.</para>
+    </section>
+    <section>
+        <title>The Solution</title>
+        <para>Instead, I suggest introducing a passive tracking system to track every observable
+            event when a document passes through the publishing chain. This system would log every
+            transaction in every output and every input of every black box, identifying as much
+            information of the transaction as possible and adding any available data about the
+            document itself, but also about the system, from timestamps to local identifiers, any
+            identity transforms happning between the input and the output, and so on.</para>
+        <para>By logging events happening to a document throughout the publishing chain, the
+            tracking system is able to construct a workflow history for that document, identifying
+            changes being done to the document when publishing it. </para>
+        <!--Illustration, version logging-->
+        <para>Importantly, when a document in the database in the first step is updated, this
+            information is passed on to the tracking system that is then able to recognise that the
+            new event happens to a document already being tracked, and can therefore build a
+            versioning history for that document.</para>
+        <para>The tracking system should ideally log the tracking events in an XML document that
+            models a workflow and versioning history for a resource. An XML database such as eXist
+            would be ideally suited to do the job.</para>
+        <para>The versioning XML, as proposed in my Balisage paper (see XXX), looks like
+            this:</para>
+        <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?>
+&lt;resource>
+    
+    &lt;!-- Base URN -->
+    &lt;base>&lt;/base>
+    
+    &lt;!-- Integer version 1 -->
+    &lt;version>
+        &lt;rev>1&lt;/rev>
+        &lt;url lang="en-GB">&lt;/url>
+        &lt;metadata>
+            ...
+        &lt;/metadata>
+        
+        &lt;!-- 1st decimal version -->
+        &lt;version>
+            &lt;rev>1&lt;/rev>
+            &lt;url>&lt;/url>
+            &lt;metadata>
+                ...
+            &lt;/metadata>
+        &lt;/version>
+        
+        &lt;!-- 2d decimal version -->
+        &lt;version>
+            &lt;rev>2&lt;/rev>
+            &lt;url lang="en-GB">&lt;/url>
+            &lt;url lang="sv-SE">&lt;/url>
+            &lt;url lang="fi-FI">&lt;/url>
+            &lt;metadata>
+                ...
+            &lt;/metadata>
+        &lt;/version>
+    &lt;/version>
+    
+    &lt;!-- Integer version 2 -->
+    &lt;version>
+        &lt;rev>2&lt;/rev>
+        &lt;url lang="en-GB">&lt;/url>
+        &lt;url lang="sv-SE">&lt;/url>
+        &lt;url lang="fi-FI">&lt;/url>
+        &lt;metadata>
+            ...
+        &lt;/metadata>
+        
+        &lt;!-- Stage 1 (decimal versions) -->
+        &lt;version>
+            &lt;rev>1&lt;/rev>
+            &lt;url>&lt;/url>
+            &lt;metadata>
+                ...
+            &lt;/metadata>
+        &lt;/version>
+        &lt;version>
+            &lt;rev>2&lt;/rev>
+            &lt;url>&lt;/url>
+            &lt;metadata>
+                ...
+            &lt;/metadata>
+        &lt;/version>
+    &lt;/version>
+&lt;/resource>
+</programlisting>
+        <para>The tracking system creates an identifier in the form of a URN, used to uniquely
+            identify a single resource originating from the first step in the publishing chain. This
+            identifier is guaranteed to be unique in the tracking system, but is not known by any of
+            the participating steps in the publishing chain that is being tracked, or indeed by the
+            document itself; it is simply a common name for a resource being followed across the
+            chain.</para>
+        <para>The URN above includes a two-level versioning component (i.e. <quote>1.0</quote>,
+                <quote>1.1</quote>, <quote>1.2</quote>, etc) to indicate the progress of the
+            resource across the publishing chain. The first level, the integer level, is created
+            when the document is first created (or rather, when the first transaction involving the
+            document is logged by the tracking system, which is probably when a completed version
+            leaves the first step), and the decimal versions identify the subsequent transactions
+            logged on that document.</para>
+        <para>The second version is the first logged transaction of an updated version of the
+            document in the first integer version, and the decimal versions added to that are the
+            transactions logged after that.</para>
+        <para>The <tag>metadata</tag> structure contains step-specific information about the
+            resource and about the system(s) involved in that particular step, including local URLs,
+            local document IDs, and so on. This information can be used later to retrieve versioning
+            or workflow history about a resource at that point in time, especially if the local
+            system is capable of answering queries based on say, the local document ID.</para>
+        <para>The result is a versioning and workflow history of a resource based on the events
+            happening to it along the publishing chain. It can by no means replace a complete
+            version <emphasis>handling</emphasis> system since none of the <quote>versions</quote>
+            that happen along the way is saved and cannot be retrieved later.</para>
+        <para>Of course, the tracking system could easily store any relevant contents of the tracked
+            document, from skeletal structure of the XML to the complete document itself, at any
+            point in the publishing chain, most usefully, perhaps, when logging the first and last
+            steps of the publishing chain. This would in effect create a versioning system of sorts,
+            a virtual document management system where changes to the content can be tracked and
+            queried. </para>
+        <para>In the current, decentralised series of systems, it is next to impossible to find out
+            if there is a later version of a document, or what the changes are between the two. The
+            tracking system outlined here can log the transactions leading up to the two end
+            versions of the document, use the logs to find out what changes were made, either by
+            direct comparison if the sources leading to the two versions are stored by the tracking
+            system, or by displaying any stored metadata about the changes.</para>
+    </section>
+    <section>
+        <title>Implementation and Use</title>
+        <para>Ideally, the tracking system is implemented using an XML database, as it makes it easy
+            to build the XML-based versioning and workflow structures, and to query them later. An
+            XML database can be used to store the tracked content itself, if desired.</para>
+        <para>The system needs to be a passive observer, in that it cannot control or change any of
+            the content it tracks, but the tracked systems (<quote>steps</quote>, in the above
+            parlance) all require some additional functionality that allows them to log the
+            transactions. Essentially, this functionality would be a service that logs metadata
+            about the originating system (system ID, timestamps, users, etc), the document (ID in
+            the originating system, URL), but also any other available information about the
+            transaction (such as automated comments or information entered by a user when initiating
+            the transaction or event). Once completed, the information would then be passed along to
+            the tracking system, initiating a change to an existing versioning XML, or perhaps a new
+            versioning instance altogether.</para>
+        <para>The versioning information stored by the tracking system can be used by any of the
+            participating systems to present an overview of the versioning and workflow history The
+            overview can also be queried by the participating systems.</para>
+        <para>Also, consider the case where a document is sent to two <emphasis>parallel publishing
+                outputs</emphasis> where the requirements of one output differ from the other's,
+            forcing the editor updating the document in <quote>step one</quote> to change the
+            contents slightly for the two outputs. In effect, this is a <quote>fork</quote>, a split
+            of the contents happening because of differing requirements, where, without a document
+            management system, it is very difficult to keep track of, and update, the
+            variants.</para>
+        <programlisting>TBA: XML example of "fork" for two outputs</programlisting>
+        <para>The tracking system would simply track any transactions leading up to the respective
+            variant, log the variations in forked but related versioning XML, and allow the editor
+            to maintain the relationship between the two. The tracking system would keep track of
+            both outputs, and also allow the end user to keep track of any relevant changes (in
+            effect, only the changes affecting his output rather than the changes affecting the
+            other).</para>
+        <!--Presentation of versioning: web page version of the XML, with hyperlinks and other functionality (diff, searches, etc)
+Make available to editors, end users-->
+    </section>
+    <bibliography>
+        <bibliomixed xml:id="id-ml-versioning">Nordström, Ari. “Multilevel Versioning.” Presented at
+            Balisage: The Markup Conference 2014, Washington, DC, August 5 - 8, 2014. In Proceedings
+            of Balisage: The Markup Conference 2014. Balisage Series on Markup Technologies, vol. 13
+            (2014). doi:10.4242/BalisageVol13.Nordstrom01.</bibliomixed>
+    </bibliography>
+</article>

@@ -1,0 +1,18 @@
+Notes for post Balisage 2014 paper version
+
+- Change the paper title to the official one
+- Consider *not* using <map> as root element in project example
+- Update images to reflect the presentation's
+- Use @scope rather than @use-latest as attribute name in link example
+- Update link target URNs to reflect the presentations (in scope/not in scope)
+- Include comments about not presenting the eXist collections directly in an editor
+
+
+Note re significance:
+
+Metadata is not always used (witness Sandvik/Cassis). If we were to implement ml, a check-in to a specific level would suffice (not solve).
+
+Fixes:
+
+- Only use one collection, but trigger on vmap rather than collection.
+- Forks, on the other hand, might require an additional collection.

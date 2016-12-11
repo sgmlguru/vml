@@ -1,0 +1,96 @@
+<map version="freeplane 1.2.0">
+<!--To view this file, download free mind mapping software Freeplane from http://freeplane.sourceforge.net -->
+<node TEXT="Multilevel Versioning in XML Documents" ID="ID_1723255651" CREATED="1283093380553" MODIFIED="1406940402046"><hook NAME="MapStyle">
+
+<map_styles>
+<stylenode LOCALIZED_TEXT="styles.root_node">
+<stylenode LOCALIZED_TEXT="styles.predefined" POSITION="right">
+<stylenode LOCALIZED_TEXT="default" MAX_WIDTH="600" COLOR="#000000" STYLE="as_parent">
+<font NAME="SansSerif" SIZE="10" BOLD="false" ITALIC="false"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="defaultstyle.details"/>
+<stylenode LOCALIZED_TEXT="defaultstyle.note"/>
+<stylenode LOCALIZED_TEXT="defaultstyle.floating">
+<edge STYLE="hide_edge"/>
+<cloud COLOR="#f0f0f0" SHAPE="ROUND_RECT"/>
+</stylenode>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.user-defined" POSITION="right">
+<stylenode LOCALIZED_TEXT="styles.topic" COLOR="#18898b" STYLE="fork">
+<font NAME="Liberation Sans" SIZE="10" BOLD="true"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.subtopic" COLOR="#cc3300" STYLE="fork">
+<font NAME="Liberation Sans" SIZE="10" BOLD="true"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.subsubtopic" COLOR="#669900">
+<font NAME="Liberation Sans" SIZE="10" BOLD="true"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.important">
+<icon BUILTIN="yes"/>
+</stylenode>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.AutomaticLayout" POSITION="right">
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level.root" COLOR="#000000">
+<font SIZE="18"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,1" COLOR="#0033ff">
+<font SIZE="16"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,2" COLOR="#00b439">
+<font SIZE="14"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,3" COLOR="#990000">
+<font SIZE="12"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,4" COLOR="#111111">
+<font SIZE="10"/>
+</stylenode>
+</stylenode>
+</stylenode>
+</map_styles>
+</hook>
+<hook NAME="AutomaticEdgeColor" COUNTER="5"/>
+<node TEXT="Resources" POSITION="right" ID="ID_616029500" CREATED="1397643332348" MODIFIED="1397643335257">
+<edge COLOR="#ff00ff"/>
+<node TEXT="Resource" ID="ID_1271719514" CREATED="1397643151342" MODIFIED="1397643339384">
+<node TEXT="Base URN" ID="ID_1909284384" CREATED="1397643171767" MODIFIED="1397643494198">
+<node TEXT="Metadata" ID="ID_988795384" CREATED="1397643800130" MODIFIED="1397643803152"/>
+</node>
+<node TEXT="Version" ID="ID_1255668381" CREATED="1397643181695" MODIFIED="1397643190765">
+<node TEXT="Rev" ID="ID_733382258" CREATED="1397643193447" MODIFIED="1397643480645">
+<node TEXT="Metadata" ID="ID_169978026" CREATED="1397643768826" MODIFIED="1397643772527"/>
+</node>
+<node TEXT="URL en-GB" ID="ID_72847826" CREATED="1397643722520" MODIFIED="1397643733861">
+<node TEXT="Metadata" ID="ID_923742512" CREATED="1397643774114" MODIFIED="1397643777079"/>
+</node>
+<node TEXT="URL sv-SE" ID="ID_1659506778" CREATED="1397643724424" MODIFIED="1397643739230">
+<node TEXT="Metadata" ID="ID_1132379270" CREATED="1397643778794" MODIFIED="1397643781279"/>
+</node>
+<node TEXT="Version" ID="ID_1007875180" CREATED="1397643222072" MODIFIED="1397643224342">
+<node TEXT="Rev" ID="ID_1467069130" CREATED="1397643238881" MODIFIED="1397643484038"/>
+<node TEXT="URL" ID="ID_1272882643" CREATED="1397643241024" MODIFIED="1406940285048"/>
+<node TEXT="..." ID="ID_1707910683" CREATED="1406940287569" MODIFIED="1406940300356"/>
+<node TEXT="Version" ID="ID_1444279925" CREATED="1397644286585" MODIFIED="1397644289551">
+<node TEXT="Rev" ID="ID_1773269898" CREATED="1397644291626" MODIFIED="1397644294470"/>
+<node TEXT="URL" ID="ID_1709629469" CREATED="1397644294737" MODIFIED="1406940233410"/>
+<node TEXT="---" ID="ID_1973531939" CREATED="1406940233852" MODIFIED="1406940237855"/>
+</node>
+<node TEXT="..." ID="ID_51579784" CREATED="1397644302322" MODIFIED="1397644303879"/>
+</node>
+<node TEXT="Version" ID="ID_366587689" CREATED="1397643228208" MODIFIED="1397643231038">
+<node TEXT="Rev" ID="ID_702294883" CREATED="1406940254251" MODIFIED="1406940256513"/>
+<node TEXT="URL" ID="ID_1250631015" CREATED="1406940259329" MODIFIED="1406940261200"/>
+<node TEXT="..." ID="ID_32239705" CREATED="1406940266556" MODIFIED="1406940269640"/>
+<node TEXT="Version" ID="ID_1038191268" CREATED="1406940270397" MODIFIED="1406940274131"/>
+<node TEXT="..." ID="ID_1978037120" CREATED="1406940275249" MODIFIED="1406940282838"/>
+</node>
+<node TEXT="..." ID="ID_1770832664" CREATED="1397644214711" MODIFIED="1397644216445"/>
+</node>
+<node TEXT="Version" ID="ID_1422185745" CREATED="1397643260241" MODIFIED="1397643262502"/>
+<node TEXT="..." ID="ID_351346341" CREATED="1397644209335" MODIFIED="1397644211004"/>
+</node>
+<node TEXT="Resource" ID="ID_1792959712" CREATED="1397643343012" MODIFIED="1397643345642"/>
+<node TEXT="..." ID="ID_1640168450" CREATED="1397644218415" MODIFIED="1397644220045"/>
+</node>
+</node>
+</map>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+    
+    <!-- Base URN -->
+    <base></base>
+    
+    <!-- Stable version 1 -->
+    <version>
+        <rev></rev>
+        <url lang="en-GB"></url>
+        
+        <!-- 1st decimal version -->
+        <version>
+            <rev></rev>
+            <url></url>
+        </version>
+        
+        <!-- 2d decimal version -->
+        <version>
+            <rev></rev>
+            <url lang="en-GB"></url>
+            <url lang="sv-SE"></url>
+            <url lang="fi-FI"></url>
+        </version>
+    </version>
+    
+    <!-- Stable version 2 -->
+    <version>
+        <rev></rev>
+        <url lang="en-GB"></url>
+        <url lang="sv-SE"></url>
+        <url lang="fi-FI"></url>
+        
+        <!-- Stage 1 (decimal versions) -->
+        <version>
+            <rev></rev>
+            <url></url>
+        </version>
+        <version>
+            <rev></rev>
+            <url></url>
+        </version>
+    </version>
+</resource>

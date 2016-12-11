@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+    
+    <!-- Base URN -->
+    <base>urn:x-resource:r1:123456</base>
+    
+    <!-- Stable (integer versions) -->
+    <version>
+        <rev>1</rev>
+        
+        <!-- Stage 1 (decimal versions) -->
+        <version>
+            <rev>1</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4660</url>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>2</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4664</url>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>3</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4667</url>
+        </version>
+    </version>
+    
+    <!-- Stable -->
+    <version>
+        <rev>2</rev>
+        <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4701</url>
+        
+        <!-- Stage 1 (decimal versions) -->
+        <version>
+            <rev>1</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4721</url>
+            
+            <!-- Stage 2 (centecimal versions) -->
+            <version>
+                <rev>1</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4727</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>2</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4731</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>3</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4740</url>
+            </version>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>2</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4757</url>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>1</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4759</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>2</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4731</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>3</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4740</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>4</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4750</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>5</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4827</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>6</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4831</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>7</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4840</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>8</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4850</url>
+            </version>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>3</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4938</url>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>1</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4940</url>
+            </version>
+            
+            <!-- Stage 2 -->
+            <version>
+                <rev>2</rev>
+                <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4950</url>
+            </version>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>4</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4960</url>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>5</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.5060</url>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>6</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.5070</url>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>7</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.5080</url>
+        </version>
+        
+        <!-- Stage 1 -->
+        <version>
+            <rev>8</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.5090</url>
+        </version>
+    </version>
+    
+    <!-- Stable -->
+    <version>
+        <rev>3</rev>
+        <url>xmldb:exist:///db/docs/stage1/mydoc.xml.5280</url>
+    </version>
+</resource>

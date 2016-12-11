@@ -1,0 +1,34 @@
+<map>
+    <resources>
+        <resource>
+            <metadata>Informaton about the base resource</metadata>
+            <base>urn:x-versions:r1:001</base>
+            
+            <!-- Existing version -->
+            <version>
+                <rev>1</rev>
+            </version>
+            
+            <!-- New version -->
+            <version>
+                <rev>2</rev>
+                <doc>
+                    <metadata></metadata>
+                    <url></url>
+                </doc>
+                <version>
+                    <rev>1</rev>
+                    <doc>
+                        <metadata></metadata>
+                        <url lang="en-GB"></url>
+                        <!--<url lang="fi-FI"></url>-->
+                    </doc>
+                    <doc>
+                        <metadata></metadata>
+                        <url lang="en-GB"></url>
+                    </doc>
+                </version>
+            </version>
+        </resource>
+    </resources>
+</map>

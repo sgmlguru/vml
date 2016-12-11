@@ -1,0 +1,47 @@
+datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+id.att = attribute id { xsd:ID }
+
+lang.att = attribute lang { text }
+
+
+map = element map { map.attlist, resources* }
+map.attlist = id.att?
+
+resources = element resources { resources.attlist, resource* }
+resources.attlist = id.att?
+
+resource = element resource { resource.attlist, metadata?, base, version* }
+resource.attlist = id.att?
+
+base = element base { base.attlist, text }
+base.attlist = id.att?
+
+version = element version { version.attlist, metadata*, rev, doc*, version* }
+version.attlist = id.att?
+
+doc = element doc { doc.attlist, metadata?, url? }
+doc.attlist = id.att?
+
+rev = element rev { rev.attlist, text }
+rev.attlist = id.att?
+
+url = element url { url.attlist, text }
+url.attlist &= lang.att?, id.att?
+
+
+# Metadata - TBA, for now text only
+metadata = element metadata { metadata.attlist, text }
+metadata.attlist = id.att?
+
+# Metadata model
+metadata.model = sysid, docid, processinfo
+
+sysid = element sysid { text }
+
+docid = element docid { text }
+
+processinfo = element sysid { text }
+
+
+start = map

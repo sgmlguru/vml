@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+    
+    <!-- Base URN -->
+    <base>urn:x-resource:r1:123456</base>
+    
+    <!-- Stable version 1 -->
+    <version>
+        <rev>1</rev>
+        <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4101</url>
+        
+        <!-- Stage 1 (decimal versions) -->
+        <version>
+            <rev>1</rev>
+            <url>xmldb:exist:///db/docs/stage1/mydoc.xml.4221</url>
+            
+            <!-- Stage 2 (centecimal versions) -->
+            <version>
+                <rev>1</rev>
+                <url lang="en-GB">xmldb:exist:///db/docs/stage1/mydoc.xml.4227</url>
+                <url lang="fi-FI">xmldb:exist:///db/docs/stage1/mydoc.xml.5119</url>
+                <url lang="sv-SE">xmldb:exist:///db/docs/stage1/mydoc.xml.5399</url>
+            </version>
+            ..
+        </version>
+        ...
+    </version>
+    
+</resource>

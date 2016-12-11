@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="file:/home/ari/Dropbox/XMLPrague/2016/virtual-document-management/rng/version-xml.rnc" type="application/relax-ng-compact-syntax"?>
+<map>
+    <resources>
+        <resource>
+            <!-- Versionless information here -->
+            <metadata>About the semantic document</metadata>
+            <!-- Base identifier for document A -->
+            <base>urn:x-versions:r1:001</base>
+            
+            <!-- Existing version -->
+            <version>
+                <rev>1</rev>
+                <!-- V 1.0 revisions go here -->
+            </version>
+            
+            <!-- New version -->
+            <version>
+                <rev>2</rev>
+                <doc>
+                    <metadata>Output from EDIT 1, EDIT 1 SYSTEM</metadata>
+                    <url>URL TO EDIT 1 VERSION</url>
+                </doc>
+                
+                <version>
+                    <rev>1</rev>
+                    <doc>
+                        <metadata>SYSTEM 1 input metadata</metadata>
+                        <url>URL to SYSTEM 1 INPUT</url>
+                    </doc>
+                    <doc>
+                        <metadata>SYSTEM 1 output metadata</metadata>
+                        <url>URL to SYSTEM 1 OUTPUT</url>
+                    </doc>
+                    
+                </version>
+                <version>
+                    <rev>2</rev>
+                    <doc>
+                        <metadata>SYSTEM 2 input metadata</metadata>
+                        <url>URL to SYSTEM 2 INPUT</url>
+                    </doc>
+                    <doc>
+                        <metadata>SYSTEM 2 output metadata</metadata>
+                        <url>URL to SYSTEM 2 OUTPUT</url>
+                    </doc>                    
+                </version>
+                <version>
+                    <rev>3</rev>
+                    <doc>
+                        <metadata>SYSTEM 3 input metadata</metadata>
+                        <url>URL to SYSTEM 3 INPUT</url>
+                    </doc>
+                    <doc>
+                        <metadata>SYSTEM 3 output metadata</metadata>
+                        <url>URL to SYSTEM 3 OUTPUT</url>
+                    </doc>
+                    <doc>
+                        <metadata>METADATA ABOUT PUBLICATION</metadata>
+                        <url>URL to PUBLICATION</url>
+                    </doc>
+                </version>
+            </version>
+        </resource>
+    </resources>
+</map>

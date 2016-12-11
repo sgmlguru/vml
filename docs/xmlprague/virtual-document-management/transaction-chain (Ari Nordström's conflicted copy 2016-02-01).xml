@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://docbook.org/xml/5.0/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://docbook.org/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<section xmlns="http://docbook.org/ns/docbook" 
+    xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0">
+    <title>Updating the Version Information</title>
+    <para>This section looks at how the versioning XML is updated.</para>
+    <procedure>
+        <para>Let's assume that an existing document A is published, passing through the publishing
+            chain in XXX. The following will take place:</para>
+        <step>
+            <para>The document is published from <emphasis>Edit 1</emphasis>, causing a transaction
+                event registered by the tracking system. The tracker logs this:</para>
+            <programlisting>Code for existing version being updated</programlisting>
+            <para>The tracker also stores the document itself and updates the XML:</para>
+            <programlisting>URL to stored document</programlisting>
+        </step>
+        <step>
+            <para><emphasis>System 1</emphasis> receives the file and causes another transaction
+                event. The tracker logs this:</para>
+            <programlisting>(NO CHANGE OR ONLY METADATA ADDITIONS)</programlisting>
+        </step>
+        <step>
+            <para><emphasis>System 1</emphasis> finishes its task(s) and sends the document off to
+                the next system, <emphasis>System 2</emphasis>, again causing a transaction event.
+                The tracker logs this:</para>
+            <programlisting>UPDATED DOC A INFO, SO NEW DEC VERSION AND MORE METADATA</programlisting>
+            <!--Maybe DIFF info as well?-->
+            <para>The tracking system stores the updated document and adds information to the
+                versioning XML:</para>
+            <programlisting>UPDATES TO VERSIONING XML, URL to STORED DOC</programlisting>
+        </step>
+        <step>
+            <para><emphasis>System 2</emphasis> receives the file, causing another transaction
+                event.</para>
+            <programlisting>CODE WITH SYSTEM 2 METADATA</programlisting>
+        </step>
+        <step>
+            <para><emphasis>System 2</emphasis> finishes its task(s), causing a transaction
+                event:</para>
+            <programlisting>SYSTEM 2 output metadata</programlisting>
+        </step>
+        <step>
+            <para>The <emphasis>System 2</emphasis> output is stored by the tracker:</para>
+            <programlisting>URL to SYSTEM 2 output</programlisting>
+            <para>The file is then sent to <emphasis>System 3</emphasis>.</para>
+        </step>
+        <step>
+            <para>System 3 receives the file, causing a transaction event:</para>
+            <programlisting>SYSTEM 3 receives file, metadata</programlisting>
+        </step>
+        <step>
+            <para>System 3 happens to be the final instance. It processes the file, causing a
+                transaction event:</para>
+            <programlisting>SYSTEM 3 TRANSACTION, PUBLISH</programlisting>
+        </step>
+        <step>
+            <para>The output is stored and logged:</para>
+            <programlisting>SYSTEM 3 OUTPUT, URL, METADATA for PUBLICATION</programlisting>
+        </step>
+    </procedure>
+</section>
+

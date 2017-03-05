@@ -4,10 +4,11 @@ id.att = attribute id { xsd:ID }
 
 lang.att = attribute lang { text }
 
-
+# TBA projects structure
 map = element map { map.attlist, resources* }
 map.attlist = id.att?
 
+# TBA link to resource (URN)
 resources = element resources { resources.attlist, resource* }
 resources.attlist = id.att?
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../schema/rng/version-xml.rnc" type="application/relax-ng-compact-syntax"?>
+<map>
+    <resources>
+        <resource>
+            <base>urn:x-vml-exist:r1:doc:000001</base>
+            
+            <!-- Integer -->
+            <version>
+                <rev>0</rev>
+                <doc>
+                    <metadata><!-- Level 0 --></metadata>
+                    <url></url>
+                </doc>
+                
+                <!-- Decimal -->
+                <version>
+                    <metadata><!-- Level 1 --></metadata>
+                    <rev>0</rev>
+                    <doc>
+                        <url></url>
+                    </doc>
+                    
+                    <!-- Centesimal -->
+                    <version>
+                        <rev>1</rev>
+                        <doc>
+                            <metadata><!-- Level 2 (saved document v 0.0.1) --></metadata>
+                            <url>/path/to/first/save</url>
+                        </doc>
+                    </version>
+                </version>
+            </version>
+        </resource>
+    </resources>
+</map>

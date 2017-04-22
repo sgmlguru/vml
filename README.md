@@ -34,3 +34,11 @@ But if you use an abstraction layer to name that resource, independently from it
 This is what VML is, an abstraction layer. Git, in comparison, would be the tool that handles the physical resources. An implementation of VML for Git, then, would be the code required to trigger and translate whatever Git does to the VML instance.
 
 If this didn't help, then please read the papers.
+
+
+## Requirements
+
+Stuff you'll need...
+
+* [eXist-db](http://exist-db.org/exist/apps/homepage/index.html), v 3.1.1 or later
+* [eXist-db versioning module](https://github.com/eXist-db/xquery-versioning-module), v 1.1.4 or later 

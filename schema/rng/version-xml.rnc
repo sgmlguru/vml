@@ -1,12 +1,40 @@
 datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
 
+default namespace = "http://www.sgmlguru.org/ns/vml"
+namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
+namespace xlink = "http://www.w3.org/1999/xlink"
+
 id.att = attribute id { xsd:ID }
+
+status.att = attribute status { text }
 
 lang.att = attribute lang { text }
 
+# Simple Xlink attributes
+xlink.basic.att =
+  [ a:defaultValue = "simple" ] attribute xlink:type { "simple" }?,
+  attribute xlink:href { text }?,
+  attribute xlink:title { text }?
+xlink.subdoc.att =
+  xlink.basic.att,
+  attribute xlink:role { text }?
+xlink.picture.att =
+  xlink.subdoc.att,
+  [ a:defaultValue = "embed" ] attribute xlink:show { "embed" }?,
+  [ a:defaultValue = "onLoad" ] attribute xlink:actuate { "onLoad" }?
+xlink.simple.att =
+  xlink.subdoc.att,
+  attribute xlink:show {
+    "new" | "replace" | "embed" | "other" | "none"
+  }?,
+  attribute xlink:actuate { "onLoad" | "onRequest" | "other" | "none" }?
+
+# Link element
+link = element link { xlink.simple.att, empty }
+
 # TBA projects structure
-map = element map { map.attlist, resources* }
-map.attlist = id.att?
+vml = element vml { vml.attlist, resources* }
+vml.attlist = id.att?
 
 # TBA link to resource (URN)
 resources = element resources { resources.attlist, resource* }
@@ -19,7 +47,7 @@ base = element base { base.attlist, text }
 base.attlist = id.att?
 
 version = element version { version.attlist, metadata*, rev, doc*, version* }
-version.attlist = id.att?
+version.attlist &= status.att?, id.att?
 
 doc = element doc { doc.attlist, metadata?, url? }
 doc.attlist = id.att?
@@ -32,8 +60,8 @@ url.attlist &= lang.att?, id.att?
 
 
 # Metadata - TBA, for now text only
-metadata = element metadata { metadata.attlist, text }
-metadata.attlist = id.att?
+metadata = element metadata { metadata.attlist, link*, text }
+metadata.attlist &= id.att?
 
 # Metadata model
 metadata.model = sysid, docid, processinfo
@@ -45,4 +73,4 @@ docid = element docid { text }
 processinfo = element sysid { text }
 
 
-start = map
+start = vml

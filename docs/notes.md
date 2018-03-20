@@ -41,7 +41,7 @@ Here, `$exist-url` is the eXist URL, `/db/test/doc/test.xml.25` in our example. 
 Of course, we don't need the entire eXist-style version history XML as such; in VML, we simply need to pair the eXist URL with the right VML version. Assuming a new edited version *1.0.1* with the eXist URL `/db/test/doc/test.xml.25`, created from the "stable" version 1.0 with the eXist URL `/db/test/doc/test.xml.20`, the VML instance might look like this:
 
 ```XML
-<map>
+<vml>
     <resources>
         <resource>
             <base>urn:x-vml-exist:r1:doc:000001</base>
@@ -82,7 +82,25 @@ Of course, we don't need the entire eXist-style version history XML as such; in 
             </version>
         </resource>
     </resources>
-</map>
+</vml>
 ```
 
 It would be possible to open any version recorded by VML simply by using the above XQuery fragment.
+
+
+# Generating a URN
+
+## Basic Procedure
+
+Something like this to create a new URN:
+
+1. Determine doc type to add to the right base URN
+2. Generate serial (add to right serials XML)
+3. Determine version levels used
+4. Create VML instance with the above info
+5. Add the URL *or* add a placeholder for the URL (if you create a link and intend to create the document later)
+
+
+## Document Type in the URN
+
+The document type discussed here is the 'doc' string in `urn:x-vml-exist:r1:doc:000001`. The available types should probably be stored in an XML document.

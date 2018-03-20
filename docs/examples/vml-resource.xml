@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-model href="../../schema/rng/version-xml.rnc" type="application/relax-ng-compact-syntax"?>
-<map>
+<vml xmlns="http://www.sgmlguru.org/ns/vml">
     <resources>
         <resource>
             <base>urn:x-vml-exist:r1:doc:000001</base>
@@ -17,20 +17,43 @@
                 <version>
                     <metadata><!-- Level 1 --></metadata>
                     <rev>0</rev>
+                    
+                    <!-- No physical document saved here, before the first edited version -->
                     <doc>
                         <url></url>
                     </doc>
                     
                     <!-- Centesimal -->
-                    <version>
+                    <version status="c-o">
+                        <metadata><!-- Level 2 --></metadata>
                         <rev>1</rev>
+                        
                         <doc>
                             <metadata><!-- Level 2 (saved document v 0.0.1) --></metadata>
                             <url>/path/to/first/save</url>
                         </doc>
                     </version>
+                    
+                    <version status="c-o">
+                        <rev>2</rev>
+                        <doc>
+                            <metadata><!-- Level 2 (saved document v 0.0.2) --></metadata>
+                            <url>/path/to/second/save</url>
+                        </doc>
+                    </version>
+                </version>
+                
+                <version status="c-i">
+                    <rev>1</rev>
+                    
+                    <doc>
+                        <metadata><!-- Checked in, version 0.1.0 with last 0 implied --></metadata>
+                        <url>/path/to/first/checked/in</url>
+                    </doc>
+                    
+                    <!-- Check out to level 2 or check in to integer level -->
                 </version>
             </version>
         </resource>
     </resources>
-</map>
+</vml>

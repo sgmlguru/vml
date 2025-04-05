@@ -46,11 +46,11 @@ resource.attlist = id.att?
 base = element base { base.attlist, text }
 base.attlist = id.att?
 
-version = element version { version.attlist, metadata*, rev, doc*, version* }
+version = element version { version.attlist, metadata*, rev, file*, version* }
 version.attlist &= status.att?, id.att?
 
-doc = element doc { doc.attlist, metadata?, url? }
-doc.attlist = id.att?
+file = element file { file.attlist, metadata?, url? }
+file.attlist = id.att?
 
 rev = element rev { rev.attlist, text }
 rev.attlist = id.att?

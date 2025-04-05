@@ -8,6 +8,8 @@
             <!-- Integer -->
             <version>
                 <rev>0</rev>
+                
+                <!-- No physical document saved here, before the first edited version -->
                 <doc>
                     <metadata><!-- Level 0 --></metadata>
                     <url></url>
@@ -30,7 +32,7 @@
                         
                         <doc>
                             <metadata><!-- Level 2 (saved document v 0.0.1) --></metadata>
-                            <url>/path/to/first/save</url>
+                            <url xml:lang="en-GB">/path/to/first/save</url>
                         </doc>
                     </version>
                     
@@ -38,7 +40,7 @@
                         <rev>2</rev>
                         <doc>
                             <metadata><!-- Level 2 (saved document v 0.0.2) --></metadata>
-                            <url>/path/to/second/save</url>
+                            <url xml:lang="en-GB">/path/to/second/save</url>
                         </doc>
                     </version>
                 </version>
@@ -48,7 +50,7 @@
                     
                     <doc>
                         <metadata><!-- Checked in, version 0.1.0 with last 0 implied --></metadata>
-                        <url>/path/to/first/checked/in</url>
+                        <url xml:lang="en-GB">/path/to/first/checked/in</url>
                     </doc>
                     
                     <!-- Check out to level 2 or check in to integer level -->

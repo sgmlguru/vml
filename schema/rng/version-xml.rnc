@@ -8,7 +8,7 @@ id.att = attribute id { xsd:ID }
 
 status.att = attribute status { text }
 
-lang.att = attribute lang { text }
+lang.att = attribute xml:lang { text }
 
 # Simple Xlink attributes
 xlink.basic.att =
@@ -33,11 +33,11 @@ xlink.simple.att =
 link = element link { xlink.simple.att, empty }
 
 # TBA projects structure
-vml = element vml { vml.attlist, resources* }
+vml = element vml { vml.attlist, base?, resources* }
 vml.attlist = id.att?
 
 # TBA link to resource (URN)
-resources = element resources { resources.attlist, resource* }
+resources = element resources { resources.attlist, base?, resource* }
 resources.attlist = id.att?
 
 resource = element resource { resource.attlist, metadata?, base, version* }

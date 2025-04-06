@@ -37,7 +37,7 @@ vml = element vml { vml.attlist, base?, resources* }
 vml.attlist = id.att?
 
 # TBA link to resource (URN)
-resources = element resources { resources.attlist, base?, resource* }
+resources = element resources { resources.attlist, metadata?, base?, resource* }
 resources.attlist = id.att?
 
 resource = element resource { resource.attlist, metadata?, base, version* }

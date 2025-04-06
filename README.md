@@ -1,6 +1,6 @@
 # Version Markup Language (VML)
 
-It's got to have a name, doesn't it? I'm fairly sure VML is taken, alredy, but it'll do for now.
+It's got to have a name, doesn't it? I'm fairly sure VML is taken, already, but it'll do for now.
 
 
 ## Intro
@@ -14,7 +14,7 @@ VML is a language designed to keep track of both, but only highlight the ones yo
 
 This repository will, in time, hopefully, not only contain the above documentation and this readme, but also the VML Relax NG schema and some code to handle a basic VML implementation.
 
-What does this mean? Well, a version handling implementation is of little use by itself, and for what I have in mind is a document management system, really, a system used to author and version handle content that is then processed and published in a variety of contexts. This is what used to be called "single-source publishing" or something to that effect.
+What does this mean? Well, a version handling implementation is of little use by itself, and for what I have in mind is a document management system, really, a system used to author and version handle content that is then processed and published in a variety of contexts. This is what used to be (and still is) called "single-source publishing" or something to that effect.
 
 I've designed and helped design a number of document management systems in my time, all of them for clients, but I've always wanted to design one for myself, the kind of system I would like to use if I got to choose. Some of the systems I've been involved in have come close, others not so much, but they are all proprietary, belonging to past employers and their clients, and I want to design and build something that I'm freely allowed to use myself and give away to others to use.
 
@@ -25,7 +25,7 @@ Most of my preferred tools start with "X" so expect XSLT and XQuery.
 
 Nothing. Git is fabulous. I use it all the time to keep track of my code. However, it targets a different problem than VML.
 
-Git can version handle everything you throw at it, but it doesn't create an abstraction layer on top of the versioned resources, which is really what VML is about. VML is about hiding not only all those saves but also the boring minutiae of the mechanics behind, including filenames, paths and just about anything else you need to hide for one reason or another.
+Git can version handle everything you throw at it, but it doesn't by itself create an abstraction layer on top of the versioned resources, which is really what VML is about. VML is about hiding not only all those saves but also the boring minutiae of the mechanics undeneath, including filenames, paths and just about anything else you need to hide for one reason or another.
 
 The reason is simple: In a "single-source document", the kind that reuses rather than copies information, the reuse is achieved by using a link to the common resource. If that link includes a path or a filename, it most likely won't be unique or persistent. Move the file and the link breaks. Rename the file and the link breaks. Etc. And we haven't even started discussing what happens if the common resource is versioned.
 

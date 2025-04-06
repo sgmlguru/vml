@@ -10,10 +10,10 @@
                 <rev>0</rev>
                 
                 <!-- No physical document saved here, before the first edited version -->
-                <doc>
+                <file>
                     <metadata><!-- Level 0 --></metadata>
                     <url></url>
-                </doc>
+                </file>
                 
                 <!-- Decimal -->
                 <version>
@@ -21,37 +21,37 @@
                     <rev>0</rev>
                     
                     <!-- No physical document saved here, before the first edited version -->
-                    <doc>
+                    <file>
                         <url></url>
-                    </doc>
+                    </file>
                     
                     <!-- Centesimal -->
                     <version status="c-o">
                         <metadata><!-- Level 2 --></metadata>
                         <rev>1</rev>
                         
-                        <doc>
+                        <file>
                             <metadata><!-- Level 2 (saved document v 0.0.1) --></metadata>
                             <url xml:lang="en-GB">/path/to/first/save</url>
-                        </doc>
+                        </file>
                     </version>
                     
                     <version status="c-o">
                         <rev>2</rev>
-                        <doc>
+                        <file>
                             <metadata><!-- Level 2 (saved document v 0.0.2) --></metadata>
                             <url xml:lang="en-GB">/path/to/second/save</url>
-                        </doc>
+                        </file>
                     </version>
                 </version>
                 
                 <version status="c-i">
                     <rev>1</rev>
                     
-                    <doc>
+                    <file>
                         <metadata><!-- Checked in, version 0.1.0 with last 0 implied --></metadata>
                         <url xml:lang="en-GB">/path/to/first/checked/in</url>
-                    </doc>
+                    </file>
                     
                     <!-- Check out to level 2 or check in to integer level -->
                 </version>

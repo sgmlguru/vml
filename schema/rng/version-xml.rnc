@@ -1,6 +1,8 @@
 datatypes xsd = "http://www.w3.org/2001/XMLSchema-datatypes"
 
 default namespace = "http://www.sgmlguru.org/ns/vml"
+
+namespace sg = "http://www.sgmlguru.org/ns/vml"
 namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
 namespace xlink = "http://www.w3.org/1999/xlink"
 
@@ -60,17 +62,19 @@ url.attlist &= lang.att?, id.att?
 
 
 # Metadata - TBA, for now text only
-metadata = element metadata { metadata.attlist, link*, text }
+metadata = element metadata { metadata.attlist, link*, foreign? }
 metadata.attlist &= id.att?
 
-# Metadata model
-metadata.model = sysid, docid, processinfo
+foreign = element foreign { foreign-nodes }
 
-sysid = element sysid { text }
+foreign-elements = element * - (sg:*) { anything }*
+foreign-attributes = attribute * {text}*
+foreign-nodes = ( foreign-elements | foreign-attributes )*
 
-docid = element docid { text }
+anything = ( element * - (sg:*) { anything } | attribute * {text} | text )*
 
-processinfo = element sysid { text }
+foreign.attlist = attribute * { text }
+
 
 
 start = vml

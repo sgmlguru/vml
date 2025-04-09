@@ -1,0 +1,27 @@
+<resource>
+    <base>urn:x-example:manual:000001</base>
+    <version>
+        <rev>0</rev>
+        <version>
+            <rev>0</rev>
+            <version>
+                <rev>1</rev>
+                <file>
+                    <url xml:lang="en-GB">/path/to/resource.xml</url>
+                </file>
+            </version>
+            <version>
+                <rev>2</rev>
+                <file>
+                    <url xml:lang="en-GB">/path/to/resource.xml.10</url>
+                </file>
+            </version>
+        </version>
+        <version>
+            <rev>1</rev>
+            <file>
+                <url xml:lang="en-GB">/path/to/resource.xml.10</url>
+            </file>
+        </version>
+    </version>
+</resource>

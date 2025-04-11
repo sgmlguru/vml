@@ -1,0 +1,793 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="balisage-1-5.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<article xmlns="http://docbook.org/ns/docbook">
+    <title>Implementing Version Handling in Yet Another CMS</title>
+    <info>
+        <abstract>
+            <para><emphasis>Just Another CMS</emphasis>, JACMS for short, is the evolution and
+                current iteration of the author's long-standing dream to create a content management
+                system using XML technologies and tools. JACMS, a content management application
+                built on top of eXist-db, is very much a work in progress, and whilst this paper
+                started as a tale of the entire system, from authoring to publishing and everything
+                between, that approach turned out to be prohibitive. As a sanity-saving measure, the
+                author eventually decided to focus on JACMS's version management, itself based on
+                XML.</para>
+            <para>JACMS's version handling is based on Version Markup Language (VML), a versioning
+                abstraction designed to identify <quote>meaningful</quote> versions on an arbitrary
+                number of levels, e.g. 1.2.3.4.5, etc. The implementation, on-going at the time of
+                this writing, is written in XQuery and XSLT, with the UIs produced by XForms, and
+                includes not only VML instances and code to describing and managing version
+                histories but also an extended XLink linkbase.</para>
+        </abstract>
+        <author>
+            <personname>
+                <firstname>Ari</firstname>
+                <surname>Nordström</surname>
+            </personname>
+            <personblurb>
+                <para>Ari is an independent markup geek based in Göteborg, Sweden. He has provided
+                    angled brackets to many organisations and companies across a number of borders
+                    over the years, some of which deliver the rule of law, help dairy farmers make a
+                    living, and assist in servicing commercial aircraft. And others are just for
+                    fun.</para>
+                <para>Ari is the proud owner and head projectionist of Western Sweden's last
+                    functioning 35/70mm cinema, situated in his garage, which should explain why he
+                    once wrote a paper on automating commercial cinemas using XML.</para>
+            </personblurb>
+        </author>
+    </info>
+    <section>
+        <title>A Short Intro</title>
+        <para>It's been my long-standing dream to develop my own XML content management system. I
+            could argue that an important reason is to do something better than any of the many such
+            systems I've been part of developing in the past, but mainly, I just think it's a cool
+            idea and something I want to do.</para>
+        <para>My 2023 Balisage paper [<xref xmlns:xlink="http://www.w3.org/1999/xlink"
+                linkend="cms-dream"/>] discussed some of this at length. It focussed on a native XML
+            portal application built on top of eXist-db and discussed my cunning plan to base a
+            proper CMS application on it, but stopped short of discussing the CMS specifics in any
+            detail. In particular, it left out the discussion on implementing version and workflow
+            handling, specifically as I describe the two in my Balisage 2014 paper on multilevel
+            versioning [<xref xmlns:xlink="http://www.w3.org/1999/xlink" linkend="vml"/>].</para>
+        <para>This paper intends to close that gap.</para>
+        <section>
+            <title>What I Mean by CMS</title>
+            <para>But let me very briefly remind you of what I mean by <quote>CMS</quote>:</para>
+            <para>A CMS is used for authoring, publishing, and managing XML documents and anything
+                they link to. The CMS should keep track of all versions of those; every XML file and
+                everything that specific XML links to should be uniquely identifiable, per exact
+                version but also per language and country. If a version 223 of an XML file links to
+                a version 11 of a PNG, we should <emphasis>always</emphasis> be able to reproduce
+                that exact configuration. </para>
+        </section>
+        <section>
+            <title>Also, the Context</title>
+            <para>This paper happened in a context. I wasn't simply implementing version and
+                workflow management as a theoretical exercise, I did it to add features to my
+                open-source CMS, JACMS (Just Another CMS). JACMS is not only about version handling,
+                of course — there is everything from authoring to publishing — but that's a subject
+                for another paper.</para>
+        </section>
+    </section>
+    <section>
+        <title>Basics</title>
+        <para>Before we jump into the implementation, let's briefly look at my views on
+            identification, change, and the like.</para>
+        <section xml:id="id-using-urn">
+            <title>Identifying Resources Using URNs</title>
+            <para>I've long advocated an approach that centers on identifying resources using URNs
+                (Uniform Resource Names). The approach starts with a base identifier that identifies
+                the resource in its purest and most abstract form:</para>
+            <programlisting>urn:x-example:manuals:123456</programlisting>
+            <para>This won't give us a specific point in time (a version), nor will it give us a
+                rendition (a specific locale, that is, language and country). For that, we need two
+                or more additional URN components:</para>
+            <programlisting>urn:x-example:manuals:123456:&lt;version>:&lt;xmllang></programlisting>
+            <para>A version 3 in English for the US of an XML document might look like this:</para>
+            <programlisting>urn:x-example:manuals:123456:3:en-US</programlisting>
+            <para>The Finnish translation for Finland of that version would then be:</para>
+            <programlisting>urn:x-example:manuals:123456:3:fi-FI</programlisting>
+            <para>Importantly, we <emphasis>declare</emphasis> that the English and Finnish translations<footnote>
+                    <para>The <quote>original</quote> could be any one of them, or some other
+                        rendition of version 3.</para>
+                </footnote> are the same, in terms of content, but they are different renditions<footnote>
+                    <para>Think of an image saved in PNG and JPG formats. The methods or renditions
+                        differ but the content remains the same.</para>
+                </footnote> of version 3.</para>
+            <para>Similarly, a change in version depicts change to the content, regardless of
+                localisation. </para>
+            <para>A more fine-grained version 3.0.1 might be presented like so:</para>
+            <programlisting>urn:x-example:manuals:123456:3.0.1:en-US</programlisting>
+            <para>The version might be split into multiple URN components:</para>
+            <programlisting>urn:x-example:manuals:123456:3:0:1:en-US</programlisting>
+            <para>But my view is that <emphasis>all</emphasis> resources should be identified and
+                managed using this same URN scheme. An image should be referenced to from the XML
+                using the URN rather than a URL:</para>
+            <programlisting>&amp;lt;figure&amp;gt;
+    &amp;lt;title&amp;gt;An Illustration&amp;lt;/title&amp;gt;
+    &amp;lt;img href=&amp;quot;urn:x-example:images:987654:1:en-US&amp;quot;/&amp;gt;
+&amp;lt;/figure&amp;gt;</programlisting>
+            <para>The URNs might be made more flexible using business rules such as <quote>use the
+                    appropriate version and rendition depending on context</quote>:</para>
+            <programlisting>&amp;lt;img href=&amp;quot;urn:x-example:images:987654:*:*&amp;quot;/&amp;gt;</programlisting>
+        </section>
+        <section>
+            <title>Link Trees</title>
+            <para>Importantly, the URNs allow us to reproduce a specific document configuration down
+                to the last version. Imagine an XML document that links to images and other XML
+                documents to form a tree structure, and where all links are in the form of
+                URNs:</para>
+            <figure xml:id="link-tree-fig">
+                <title>Linked XML documents and images</title>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="img/Bal2025nord0128-1.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>Where <code>URN1</code> might look like this:</para>
+            <programlisting>&amp;lt;doc&amp;gt;
+    &amp;lt;title&amp;gt;My document&amp;lt;/title&amp;gt;
+    &amp;lt;xi:include href=&amp;quot;URN2&amp;quot;/&amp;gt;
+    &amp;lt;img href=&amp;quot;URN3&amp;quot;/&amp;gt;
+    &amp;lt;img href=&amp;quot;URN4&amp;quot;/&amp;gt;
+&amp;lt;/doc&amp;gt;</programlisting>
+            <para>You get the idea.</para>
+        </section>
+        <section>
+            <title>Change</title>
+            <para>What constitutes a change? What drives a version bump? For example, do we bump the
+                version if we fix a spelling mistake? Add a paragraph? Update a link? Remove or add
+                one?</para>
+            <para>It depends.</para>
+            <para>For a longer discussion see my 2014 Balisage paper on the subject [<xref
+                    xmlns:xlink="http://www.w3.org/1999/xlink" linkend="vml"/>]. Essentially, there
+                are a couple of things to consider regarding change:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Not every change is meaningful. For example, if every save operation
+                        creates a new version, very few of them will be useful.</para>
+                </listitem>
+                <listitem>
+                    <para>Some identify small fixes. Others are used for adding new features. Yet
+                        others are <quote>backwards-incompatible</quote>. Etc. These are different
+                        levels of change; you can add as many as you like, as long as you define the
+                        business rules.</para>
+                </listitem>
+                <listitem>
+                    <para>Assuming well-defined version levels where each new version is
+                        semantically meaningful, we also need an additional level that isn't. In
+                        that, we are only concerned with change meaningful to the author.</para>
+                </listitem>
+            </itemizedlist>
+            <para>Some of the latter identify a workflow stage, i.e. <quote>this is a first complete
+                    draft</quote> or <quote>this is now ready for review</quote>. They could mean
+                that the content is ready for a meaningful new version, perhaps one that is
+                    <quote>one or more levels up</quote>, but they could also result in additional
+                changes on the same level. In other words, a workflow change is NOT the same as a
+                (meaningful) version change.</para>
+            <para>For a three-level set of versions <code>X.Y.Z.</code>, we will therefore need a
+                fourth, only used for in-work changes.</para>
+            <para>Adding a translation happens to a specific version. A Finnish translation of the
+                English 1.0.0 document results in a Finnish 1.0.0. Etc.<footnote>
+                    <para>An argument can be made that the Finnish translation could have a number
+                        of separate, independent fourth-level versions meaningful to the
+                        translation, but in my view, this is not consistent with a single version
+                        and localisation strategy.</para>
+                </footnote></para>
+            <para>Remember that a translation is a rendition, not an exact copy. The original and
+                the translation are declared to be equivalent. They don't need to, for example, have
+                the same node count; a single paragraph in one language may better express the
+                sentiment presented in two paragraphs in another. Images frequently need to be
+                localised, not only in terms of text but also cultural differences. Etc.</para>
+        </section>
+    </section>
+    <section>
+        <title>Version Markup Language</title>
+        <para><emphasis>Version Markup Language (VML)</emphasis> is an approach and a Relax NG
+            Compact Schema for versioning (for more, see my Balisage 2014 paper [<xref
+                xmlns:xlink="http://www.w3.org/1999/xlink" linkend="vml"/>] and the VML Github
+            repository [<xref xmlns:xlink="http://www.w3.org/1999/xlink" linkend="vml-github"/>])
+            that resulted. A VML instance is an XML document describing the version history of one
+            or more resources stored by a CMS. It is based on the URN principles as described above
+            (see <xref xmlns:xlink="http://www.w3.org/1999/xlink" linkend="id-using-urn"/>), and it
+            is perhaps best described using an example:</para>
+        <programlisting>&amp;lt;vml xmlns=&amp;quot;http://www.sgmlguru.org/ns/vml&amp;quot;&amp;gt;
+    &amp;lt;resources&amp;gt;
+        &amp;lt;resource&amp;gt;
+            &amp;lt;base&amp;gt;urn:x-vml-exist:r1:doc:000001&amp;lt;/base&amp;gt;
+            
+            &amp;lt;!-- Integer --&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+                
+                &amp;lt;!-- No physical document saved here --&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;metadata&amp;gt;&amp;lt;!-- Level 0 --&amp;gt;&amp;lt;/metadata&amp;gt;
+                    &amp;lt;url&amp;gt;&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+                
+                &amp;lt;!-- Decimal --&amp;gt;
+                &amp;lt;version&amp;gt;
+                    &amp;lt;metadata&amp;gt;&amp;lt;!-- Level 1 --&amp;gt;&amp;lt;/metadata&amp;gt;
+                    &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+                    
+                    &amp;lt;!-- No physical document saved here either --&amp;gt;
+                    &amp;lt;file&amp;gt;
+                        &amp;lt;url&amp;gt;&amp;lt;/url&amp;gt;
+                    &amp;lt;/file&amp;gt;
+                    
+                    &amp;lt;!-- Centesimal - this is the first edit --&amp;gt;
+                    &amp;lt;version status=&amp;quot;c-o&amp;quot;&amp;gt;
+                        &amp;lt;metadata&amp;gt;&amp;lt;!-- Level 2 --&amp;gt;&amp;lt;/metadata&amp;gt;
+                        &amp;lt;rev&amp;gt;1&amp;lt;/rev&amp;gt;
+                        
+                        &amp;lt;file&amp;gt;
+                            &amp;lt;metadata&amp;gt;&amp;lt;!-- Level 2 (saved document v 0.0.1) --&amp;gt;&amp;lt;/metadata&amp;gt;
+                            &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/first/save&amp;lt;/url&amp;gt;
+                        &amp;lt;/file&amp;gt;
+                    &amp;lt;/version&amp;gt;
+                    
+                    &amp;lt;!-- Second edit --&amp;gt;
+                    &amp;lt;version status=&amp;quot;c-o&amp;quot;&amp;gt;
+                        &amp;lt;rev&amp;gt;2&amp;lt;/rev&amp;gt;
+                        &amp;lt;file&amp;gt;
+                            &amp;lt;metadata&amp;gt;&amp;lt;!-- Level 2 (saved document v 0.0.2) --&amp;gt;&amp;lt;/metadata&amp;gt;
+                            &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/second/save&amp;lt;/url&amp;gt;
+                        &amp;lt;/file&amp;gt;
+                    &amp;lt;/version&amp;gt;
+                &amp;lt;/version&amp;gt;
+                
+                &amp;lt;version status=&amp;quot;c-i&amp;quot;&amp;gt;
+                    &amp;lt;rev&amp;gt;1&amp;lt;/rev&amp;gt;
+                    
+                    &amp;lt;file&amp;gt;
+                        &amp;lt;metadata&amp;gt;&amp;lt;!-- Create version 0.1, first meaningful version --&amp;gt;&amp;lt;/metadata&amp;gt;
+                        &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/first/checked/in&amp;lt;/url&amp;gt;
+                    &amp;lt;/file&amp;gt;
+                    
+                    &amp;lt;!-- Check out to level 2 or check in to integer level --&amp;gt;
+                &amp;lt;/version&amp;gt;
+            &amp;lt;/version&amp;gt;
+        &amp;lt;/resource&amp;gt;
+    &amp;lt;/resources&amp;gt;
+&amp;lt;/vml&amp;gt;</programlisting>
+        <para>Let's unravel this. A VML XML document is essentially a series of resources, each of
+            which contains a nested <code>version</code> structure, like so:</para>
+        <figure>
+            <title>Nested Version Elements</title>
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="img/Bal2025nord0128-2.png"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <para>The <code>base</code> element provides the base URN, before versions (and their
+            renditions) are applied. This means that the complete URN is what the <code>base</code>
+            and the nested <code>version/rev</code> elements provide. A <code>version</code> element
+            looks like this, regardless of level:</para>
+        <programlisting>&amp;lt;version&amp;gt;
+    &amp;lt;rev&amp;gt;X&amp;lt;/rev&amp;gt;
+    &amp;lt;file&amp;gt;
+        &amp;lt;url xml:lang=&amp;quot;YY-ZZ&amp;quot;&amp;gt;/path/to/file&amp;lt;/url&amp;gt;
+    &amp;lt;/file&amp;gt;
+&amp;lt;/version&amp;gt;</programlisting>
+        <para><code>&amp;lt;rev&amp;gt;X&amp;lt;/rev&amp;gt;</code> provides a revision counter
+                <emphasis>on the current level</emphasis>. <code>&amp;lt;url
+                xml:lang=&amp;quot;YY-ZZ&amp;quot;&amp;gt;/path/to/file&amp;lt;/url&amp;gt;</code>
+            links the actual file with the file's URL and the localisation. A basic three-level
+            example XML file <code>resource.xml</code> resolving to a URN
+                <code>urn:x-example:manual:000001:0.0.1</code> would look like this<footnote>
+                <para>Assuming a single version component in the URN.</para>
+            </footnote>:</para>
+        <programlisting>&amp;lt;resource&amp;gt;
+    &amp;lt;base&amp;gt;urn:x-example:manual:000001&amp;lt;/base&amp;gt;
+    &amp;lt;version&amp;gt;
+        &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+        &amp;lt;version&amp;gt;
+            &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;1&amp;lt;/rev&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/resource.xml&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+            &amp;lt;/version&amp;gt;
+        &amp;lt;/version&amp;gt;
+    &amp;lt;/version&amp;gt;
+&amp;lt;/resource&amp;gt;</programlisting>
+        <note>
+            <para>The VML schema is still in flux as I write this.</para>
+        </note>
+        <para><quote>Checking out</quote> the resource, editing it, and then <quote>checking
+                in</quote> it again would result in a new <quote>patch-level</quote> (level 3)
+            version 0.0.2:</para>
+        <programlisting>&amp;lt;resource&amp;gt;
+    &amp;lt;base&amp;gt;urn:x-example:manual:000001&amp;lt;/base&amp;gt;
+    &amp;lt;version&amp;gt;
+        &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+        &amp;lt;version&amp;gt;
+            &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;1&amp;lt;/rev&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/resource.xml&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+            &amp;lt;/version&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;2&amp;lt;/rev&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/resource.xml.10&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+            &amp;lt;/version&amp;gt;
+        &amp;lt;/version&amp;gt;
+    &amp;lt;/version&amp;gt;
+&amp;lt;/resource&amp;gt;</programlisting>
+        <para>The new version might then be reviewed and approved, bumping it to a <quote>minor
+                update</quote> (level 2), in which case the new version, 0.2.0<footnote>
+                <para>With the level 3 <quote>0</quote> implied.</para>
+            </footnote>, would be registered like so:</para>
+        <programlisting>&amp;lt;resource&amp;gt;
+    &amp;lt;base&amp;gt;urn:x-example:manual:000001&amp;lt;/base&amp;gt;
+    &amp;lt;version&amp;gt;
+        &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+        &amp;lt;version&amp;gt;
+            &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;1&amp;lt;/rev&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/resource.xml&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+            &amp;lt;/version&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;2&amp;lt;/rev&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/resource.xml.10&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+            &amp;lt;/version&amp;gt;
+        &amp;lt;/version&amp;gt;
+        &amp;lt;version&amp;gt;
+            &amp;lt;rev&amp;gt;1&amp;lt;/rev&amp;gt;
+            &amp;lt;file&amp;gt;
+                &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/path/to/resource.xml.10&amp;lt;/url&amp;gt;
+            &amp;lt;/file&amp;gt;
+        &amp;lt;/version&amp;gt;
+    &amp;lt;/version&amp;gt;
+&amp;lt;/resource&amp;gt;
+</programlisting>
+        <para>The keen-eyed reader will note that version 0.0.2 and 0.1.0 both point at the same
+            file, <code>/path/to/resource.xml.10</code>, as no changes were required.</para>
+        <section xml:id="exist-versioning-module">
+            <title>Storing Resource Versions</title>
+            <para>In the above example, the first stored version is
+                    <code>/path/to/resource.xml</code> and the second
+                    <code>/path/to/resource.xml.10</code>. What is actually stored here?</para>
+            <para>VML is a versioning abstraction, a way to identify meaningful change. It does not
+                dictate how or where to store the physical resources, only that the two are
+                different because they are identified using different <code>version</code> elements
+                in the CML instance. A VML implementation might use a naming convention to keep the
+                saved resources unique in the file system<footnote>
+                    <para>Or store them in different folders, or any combination thereof, an
+                        approach suggested in my original Balisage paper.</para>
+                </footnote>, but better is to implement it on top of a source control system such as
+                Git or, as in JACMS, eXist-db's Versioning Module [<xref
+                    xmlns:xlink="http://www.w3.org/1999/xlink" linkend="github-versioning-module"
+                />]. Many or even most of these systems save a diff rather than the entire file,
+                which has many advantages.</para>
+            <para>For a resource <code>/db/test/doc/test.xml</code>, eXist-db's Versioning Module
+                records its version history like so:</para>
+            <programlisting>&amp;lt;v:history xmlns:v=&amp;quot;http://exist-db.org/versioning&amp;quot;&amp;gt;
+    &amp;lt;v:document&amp;gt;/db/test/doc/test.xml&amp;lt;/v:document&amp;gt;
+    &amp;lt;v:revisions&amp;gt;
+        &amp;lt;v:revision rev=&amp;quot;5&amp;quot;&amp;gt;
+            &amp;lt;v:date&amp;gt;2017-04-22T20:57:45.189+02:00&amp;lt;/v:date&amp;gt;
+            &amp;lt;v:user&amp;gt;admin&amp;lt;/v:user&amp;gt;
+        &amp;lt;/v:revision&amp;gt;
+        &amp;lt;v:revision rev=&amp;quot;9&amp;quot;&amp;gt;
+            &amp;lt;v:date&amp;gt;2017-04-22T20:59:51.378+02:00&amp;lt;/v:date&amp;gt;
+            &amp;lt;v:user&amp;gt;admin&amp;lt;/v:user&amp;gt;
+        &amp;lt;/v:revision&amp;gt;
+        &amp;lt;v:revision rev=&amp;quot;17&amp;quot;&amp;gt;
+            &amp;lt;v:date&amp;gt;2017-04-22T21:55:50.796+02:00&amp;lt;/v:date&amp;gt;
+            &amp;lt;v:user&amp;gt;admin&amp;lt;/v:user&amp;gt;
+        &amp;lt;/v:revision&amp;gt;
+        &amp;lt;v:revision rev=&amp;quot;25&amp;quot;&amp;gt;
+            &amp;lt;v:date&amp;gt;2017-04-22T22:50:02.034+02:00&amp;lt;/v:date&amp;gt;
+            &amp;lt;v:user&amp;gt;admin&amp;lt;/v:user&amp;gt;
+        &amp;lt;/v:revision&amp;gt;
+    &amp;lt;/v:revisions&amp;gt;
+&amp;lt;/v:history&amp;gt;</programlisting>
+            <para>A function <code>v:doc()</code> can be used to retrieve a specific version. For
+                example, <code>v:doc($url, 17)</code> will return version 17, above.</para>
+        </section>
+    </section>
+    <section xml:id="resources-list">
+        <title>Resources in JACMS</title>
+        <para>JACMS is built on top of eXist-db, a native XML database. We can use built-in
+            functions to produce a list of resources stored in a given collection and its
+            descendants in eXist. For example, given this collection hierarchy:</para>
+        <figure>
+            <title>Files in eXist-db</title>
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="img/Bal2025nord0128-3.png"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <para>We can output this as XML using built-in functions:</para>
+        <programlisting>&amp;lt;exist:collection
+    name=&amp;quot;/db/cms/content/dita-examples/04&amp;quot;
+    created=&amp;quot;2025-04-01T16:17:37.371+02:00&amp;quot;
+    owner=&amp;quot;admin&amp;quot;
+    group=&amp;quot;dba&amp;quot;
+    permissions=&amp;quot;rwxr-xr-x&amp;quot;
+    uri=&amp;quot;/db/cms/content/dita-examples/04&amp;quot;&amp;gt;
+    &amp;lt;exist:collection
+        name=&amp;quot;/db/cms/content/dita-examples/04/sub&amp;quot;
+        created=&amp;quot;2025-04-01T16:17:37.382+02:00&amp;quot;
+        owner=&amp;quot;admin&amp;quot;
+        group=&amp;quot;dba&amp;quot;
+        permissions=&amp;quot;rwxr-xr-x&amp;quot;
+        uri=&amp;quot;/db/cms/content/dita-examples/04/sub&amp;quot;&amp;gt;
+        &amp;lt;exist:resource
+            name=&amp;quot;relpath-map-linking-11.ditamap&amp;quot;
+            created=&amp;quot;2025-04-01T16:17:37.385+02:00&amp;quot;
+            last-modified=&amp;quot;2025-04-01T16:17:37.385+02:00&amp;quot;
+            owner=&amp;quot;admin&amp;quot;
+            group=&amp;quot;dba&amp;quot;
+            permissions=&amp;quot;rw-r--r--&amp;quot;
+            uri=&amp;quot;/db/cms/content/dita-examples/04/sub/relpath-map-linking-11.xml&amp;quot;/&amp;gt;
+    &amp;lt;/exist:collection&amp;gt;
+    &amp;lt;exist:resource
+        name=&amp;quot;topic11.dita&amp;quot;
+        created=&amp;quot;2025-04-01T16:17:37.372+02:00&amp;quot;
+        last-modified=&amp;quot;2025-04-01T16:17:37.372+02:00&amp;quot;
+        owner=&amp;quot;admin&amp;quot;
+        group=&amp;quot;dba&amp;quot;
+        permissions=&amp;quot;rw-r--r--&amp;quot;
+        uri=&amp;quot;/db/cms/content/dita-examples/04/topic11.xml&amp;quot;/&amp;gt;
+&amp;lt;/exist:collection&amp;gt;</programlisting>
+        <para>This is just an initial list of resources stored in eXist-db. These are not
+            necessarily managed by JACMS. When a new XML file is created, edited, and stored in
+            eXist-db, it needs to be added to the resources list, using a manual trigger; you can
+            store and save XML in eXist-db without allowing it to be managed by JACMS.</para>
+        <para>The resources list can be displayed as a UI using XForms<footnote>
+                <para>The UI presented here is a test and will change.</para>
+            </footnote>:</para>
+        <figure xml:id="resources-list-ui">
+            <title>Resources List XForm</title>
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="img/Bal2025nord0128-4.png"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <para>The resources that are added to JACMS are enriched with an <code>@id</code> attribute,
+            a generated base URN that identifies the resource, to which separate
+                <code>@version</code> and <code>@xml:lang</code> attributes are added at the time of display<footnote>
+                <para>The list is used in multiple contexts, some of which require to list older
+                    versions and other locales.</para>
+            </footnote>:</para>
+        <programlisting>&amp;lt;exist:resource
+    name=&amp;quot;new-content.xml&amp;quot;
+    created=&amp;quot;2025-04-01T16:17:37.122+02:00&amp;quot;
+    last-modified=&amp;quot;2025-04-01T16:17:37.122+02:00&amp;quot;
+    owner=&amp;quot;admin&amp;quot;
+    group=&amp;quot;dba&amp;quot;
+    permissions=&amp;quot;rw-r--r--&amp;quot;
+    uri=&amp;quot;/db/cms/content/dita-examples/new-content.xml&amp;quot;
+    id=&amp;quot;id-123456&amp;quot;
+    base-urn=&amp;quot;urn:x-example:manual:000001&amp;quot;
+    version=&amp;quot;1.2.3&amp;quot;
+    xml:lang=&amp;quot;en-GB&amp;quot;/&amp;gt;</programlisting>
+        <para>The initial list of resources is updated rather than regenerated whenever additional
+            resources are added to JACMS. Most XML resources are created in the CMS, but non-XML
+            resources such as images are created and edited elsewhere.</para>
+        <section>
+            <title>Generating URNs</title>
+            <para>The URNs used by JACMS take the following form:</para>
+            <programlisting>urn:&lt;namespace>:&lt;type>:&lt;sequence>:&lt;version>:&lt;locale></programlisting>
+            <itemizedlist>
+                <listitem>
+                    <para><code>&lt;namespace></code> is the URN namespace; allowed values are
+                        defined in a config file</para>
+                </listitem>
+                <listitem>
+                    <para><code>&lt;type></code> is the type of resource (manual, illustration, 3D
+                        graphic, etc); allowed values are defined in a config file</para>
+                </listitem>
+                <listitem>
+                    <para><code>&lt;sequence></code> is the first available sequence number of the
+                        resource type</para>
+                </listitem>
+                <listitem>
+                    <para><code>&lt;version></code> is the version string, e.g. 0.0.1; the number of
+                        levels is defined in a config file</para>
+                </listitem>
+                <listitem>
+                    <para><code>&lt;locale></code> is the combined language and country of the
+                        resources; allowed values are listed in a config file</para>
+                </listitem>
+            </itemizedlist>
+            <para>The URN generator is set of functions triggered when adding a resource to JACMS.
+                Depending on the type of resource, the exact process differs. Ideally, for example,
+                the XML should have an <code>@xml:lang</code> attribute that should be used to
+                populate the URN locale of the new XML. For a non-XML file, different approaches,
+                from file naming conventions to manually adding the information, are used.</para>
+        </section>
+    </section>
+    <section>
+        <title>Adding VML</title>
+        <!--<para>TBA eXist-db versioning module</para>-->
+        <para>The resources list (see <xref xmlns:xlink="http://www.w3.org/1999/xlink"
+                linkend="resources-list"/>) is intended to list resources to be displayed. Usually
+            these will be the latest versions; the default view in JACMS is just that. The version
+            history of the resource is accessible in a separate VML instance, the two associated
+            with each other using the resource ID. Consider this resource:</para>
+        <programlisting>&amp;lt;exist:resource
+    name=&amp;quot;new-content.xml&amp;quot;
+    created=&amp;quot;2025-04-01T16:17:37.122+02:00&amp;quot;
+    last-modified=&amp;quot;2025-04-01T16:17:37.122+02:00&amp;quot;
+    owner=&amp;quot;admin&amp;quot;
+    group=&amp;quot;dba&amp;quot;
+    permissions=&amp;quot;rw-r--r--&amp;quot;
+    uri=&amp;quot;/db/cms/content/dita-examples/new-content.xml&amp;quot;
+    id=&amp;quot;id-123456&amp;quot;
+    base-urn=&amp;quot;urn:x-example:manual:000001&amp;quot;
+    version=&amp;quot;1.2.3&amp;quot;
+    xml:lang=&amp;quot;en-GB&amp;quot;/&amp;gt;</programlisting>
+        <para>The matching VML instance looks like this:</para>
+        <programlisting>&amp;lt;resource id=&amp;quot;id-123456&amp;quot;&amp;gt;
+    &amp;lt;base&amp;gt;urn:x-example:manual:000001&amp;lt;/base&amp;gt;
+    
+    ...
+    
+    &amp;lt;version&amp;gt;
+        &amp;lt;rev&amp;gt;1&amp;lt;/rev&amp;gt;
+        
+        ...
+        
+        &amp;lt;version&amp;gt;
+            &amp;lt;rev&amp;gt;2&amp;lt;/rev&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;1&amp;lt;/rev&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/db/cms/content/dita-examples/new-content.xml.155&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+            &amp;lt;/version&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;2&amp;lt;/rev&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/db/cms/content/dita-examples/new-content.xml.187&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+            &amp;lt;/version&amp;gt;
+            &amp;lt;version&amp;gt;
+                &amp;lt;rev&amp;gt;3&amp;lt;/rev&amp;gt;
+                &amp;lt;file&amp;gt;
+                    &amp;lt;url xml:lang=&amp;quot;en-GB&amp;quot;&amp;gt;/db/cms/content/dita-examples/3new-content.xml.193&amp;lt;/url&amp;gt;
+                &amp;lt;/file&amp;gt;
+            &amp;lt;/version&amp;gt;
+        &amp;lt;/version&amp;gt;
+    &amp;lt;/version&amp;gt;
+&amp;lt;/resource&amp;gt;</programlisting>
+        <para>Note <code>id="id-123456"</code>.</para>
+        <para>The VML XML is first generated when the resource is added to JACMS. It is then added
+            to whenever a new version is created — which happens when checking in an edited XML or
+            uploading a new non-XML resource. <emphasis>How</emphasis> the VML is updated depends on
+            the type of check-in. A new version is author-controlled if the purpose is to simply
+            check in your work. All that happens is the creation of a new <code>version</code>
+            structure on the same level.</para>
+        <para>A bump to a higher <code>version</code> level will generally require additional
+            workflow steps since its purpose is to produce a new, approved version. Note that for a
+            three-level VML setup, the editing happens on level four; when a level four version is
+            approved, it may result in a new version on any level, depending on the business rules
+            in place<footnote>
+                <para>Here, a business rule is simply the practice that dictates what level the new
+                    version will get depending on the content change, as employed by the
+                    organisation.</para>
+            </footnote>.</para>
+        <para>In both cases, the check-in and the addition(s) to the VML are handled by XQuery and
+            some XSLT. Note that there is a third case, for the initial creation of the VML
+            instance. The processes are similar and rather simple — a check-in is essentially a save
+            operation where we first generate a new <code>version</code> element with a
+                <code>rev</code> label (essentially a counter of preceding siblings and the new
+            element), and insert the new eXist-db version URL (see <xref
+                xmlns:xlink="http://www.w3.org/1999/xlink" linkend="exist-versioning-module"/>) to a
+            child <code>url</code> element.</para>
+        <section>
+            <title>Additional Metadata</title>
+            <para>A CMS is all about reuse. You may be familiar with the <quote>topic-based
+                    paradigm</quote>, that is, writing small topics, each one about a single
+                subject, and then assembling the topics into full documents, with each document
+                reusing existing topics as needed. The topics are Lego blocks; the documents are
+                what you do with them. This is what XML vocabularies such as DITA and S1000D
+                advocate.</para>
+            <para>But, as everyone with experience from topic-based authoring will know, whilst most
+                topics can be reused if properly authored, there will always be content that needs
+                tweaking. For example, your topic describes an engine, but the engine variants are
+                all slightly different from each other, requiring differing assembly or disassembly
+                steps, different illustrations, part numbers, etc.</para>
+            <para>This is where <emphasis>profiling</emphasis> becomes essential. Profiling is
+                simply about marking content as applicable to only certain configurations or
+                properties. You have something like this:</para>
+            <programlisting>&amp;lt;para product=&amp;quot;A&amp;quot;&amp;gt;This is for product A.&amp;lt;/para&amp;gt;
+&amp;lt;para product=&amp;quot;B&amp;quot;&amp;gt;This is for product B.&amp;lt;/para&amp;gt;
+&amp;lt;para&amp;gt;This is for all products.&amp;lt;/para&amp;gt;</programlisting>
+            <para>Variations of this basic theme are everywhere, albeit slightly different from one
+                vocabulary to the next.</para>
+            <para>There is plenty of other content-specific metadata to consider, from a topic's
+                title to, say, vehicle VIN numbers or ATA codes.</para>
+            <para>Obviously, it would be useful to include some or all of the metadata in the listed
+                resources (see <xref xmlns:xlink="http://www.w3.org/1999/xlink"
+                    linkend="resources-list-ui"/>, where we include profiling metadata on the
+                right-hand side). We probably don't want to fetch that information from the content
+                at runtime, however, so they need to be attached to the resource item when
+                generating or updating the resources list, somehow. There are a few options:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Add the metadata as attributes (or elements, for that matter) to the
+                        resources list. This is far from ideal, as it means that the metadata
+                        applies to ALL resource versions, which probably won't be the case.</para>
+                </listitem>
+                <listitem>
+                    <para>Add the metadata to the VML document, either on the <code>resource</code>
+                        element (meaning that the metadata applies to ALL versions) or on specific
+                            <code>version</code> elements (meaning that the metadata only applies to
+                        that version). The downside of this approach is that the VML schema would
+                        have to accommodate any number of metadata approaches to handle the various
+                        schemas we want JACMS to support.</para>
+                </listitem>
+                <listitem>
+                    <para>Add the metadata to a third, separate XML file, with one file per resource
+                        or even per specific version; or we could use a single file for all
+                        resources. This is the cool approach; for more, see <xref
+                            xmlns:xlink="http://www.w3.org/1999/xlink" linkend="linkbase"/>.</para>
+                </listitem>
+            </itemizedlist>
+            <para>Currently, JACMS uses option two. VML adds a <code>metadata</code> element to both
+                    <code>resource</code> and <code>version</code>. <code>metadata</code>, in turn,
+                contains a <code>foreign</code> element that literally allows markup<footnote>
+                    <para>This could be my first-ever <code>ANY</code> content model. Certainly one
+                        of very, very few.</para>
+                </footnote>, excepting elements in the VML namespace:</para>
+            <programlisting>&amp;lt;resource&amp;gt;
+    &amp;lt;metadata&amp;gt;
+        &amp;lt;foreign&amp;gt;
+            &amp;lt;other:foo/&amp;gt;
+        &amp;lt;/foreign&amp;gt;
+    &amp;lt;/metadata&amp;gt;
+    &amp;lt;base&amp;gt;urn:x-vml-test:mydoc:000001&amp;lt;/base&amp;gt;
+    &amp;lt;version&amp;gt;
+        &amp;lt;metadata&amp;gt;
+            &amp;lt;foreign&amp;gt;
+                &amp;lt;other:bar/&amp;gt;
+            &amp;lt;/foreign&amp;gt;
+        &amp;lt;/metadata&amp;gt;
+        &amp;lt;rev&amp;gt;0&amp;lt;/rev&amp;gt;
+        ...
+</programlisting>
+            <para>This, of course, requires additional validation and processing, and I'm not
+                convinced that it's the best approach. It does work, though.</para>
+        </section>
+        <section xml:id="linkbase">
+            <title>Coupling a Resource with Its Version History</title>
+            <para>Whilst it would be a reasonable approach to add the links to the VML directly in
+                the resources list, a more robust approach is to add a third XML document type, en
+                extended XLink linkbase<footnote>
+                    <para>Defined by a modest RNC schema.</para>
+                </footnote>, to define those relations. Here's a brief example:</para>
+            <programlisting>&amp;lt;linkbase xmlns:xlink=&amp;quot;http://www.w3.org/1999/xlink&amp;quot; xlink:type=&amp;quot;extended&amp;quot;&amp;gt;
+    &amp;lt;title xlink:type=&amp;quot;title&amp;quot;&amp;gt;Connecting a resource with its linkbase&amp;lt;/title&amp;gt;
+    &amp;lt;group&amp;gt;
+        &amp;lt;title xlink:type=&amp;quot;title&amp;quot;&amp;gt;A resource, its VML and the matchmaker&amp;lt;/title&amp;gt;
+        &amp;lt;locator xlink:type=&amp;quot;locator&amp;quot; xlink:href=&amp;quot;/path/to/resources-list.xml#id-123456&amp;quot; xlink:label=&amp;quot;resources-list&amp;quot;/&amp;gt;
+        &amp;lt;locator xlink:type=&amp;quot;locator&amp;quot; xlink:href=&amp;quot;/path/to/vml.xml#id-123456&amp;quot; xlink:label=&amp;quot;vml&amp;quot;/&amp;gt;
+        &amp;lt;arc xlink:type=&amp;quot;arc&amp;quot; xlink:from=&amp;quot;resources-list&amp;quot; xlink:to=&amp;quot;vml&amp;quot;/&amp;gt;
+        &amp;lt;arc xlink:type=&amp;quot;arc&amp;quot; xlink:from=&amp;quot;vml&amp;quot; xlink:to=&amp;quot;resources-list&amp;quot;/&amp;gt;
+    &amp;lt;/group&amp;gt;
+&amp;lt;/linkbase&amp;gt;</programlisting>
+            <para>This has several advantages. First, the relations are defined out-of-line,
+                independently from either document type, and can be kept unchanged if the resources
+                list is modified or even regenerated. Second, we can define the direction of the
+                relation — notice how there are two <code>arc</code> elements defining the
+                relationship between the resources list and the VML, one in each direction. And
+                third, the <code>arc</code> elements define relations between labels representing
+                the resources rather than the resource URLs themselves, allowing us to create
+                classes of relationships so we don't have to define each one separately.</para>
+            <para>Finally, even though the current implementation places the metadata of each
+                resource and version inline in the VML instances, the linkbase allows us to move
+                that information to an out-of-line metadata XML document. It can also be argued that
+                a combined approach, with some metadata inline and some out-of-line, fits better
+                when adding XML vocabularies such as S1000D, where the so-called BREX data modules
+                that define the business rules of the setup are separate documents.</para>
+        </section>
+    </section>
+    <section>
+        <title>The Process</title>
+        <para>It occurs to me that the intended processes may not be obvious to the casual reader,
+            so this section attempts to fill in the gaps. Firstly, adding a new document to JACMS
+            control is a manually controlled process:</para>
+        <orderedlist>
+            <listitem>
+                <para>Create and edit an XML document in oXygen<footnote>
+                        <para>oXygen has an out-of-the-box integration with eXist-db.</para>
+                    </footnote>. Save it in eXist-db.</para>
+            </listitem>
+            <listitem>
+                <para>Add the saved document to JACMS. This is currently a script that triggers
+                    manually, generating a URN, additional resources list attributes, and a VML
+                    instance. We also add the necessary linkbase locators and arcs.</para>
+                <para>Non-XML files are uploaded to eXist-db and then added to JACMS using that same
+                    script. Currently, the script needs to be manually configured to add the resurce
+                    type (manual, image, etc) but the idea is to add this to the XForm listing all
+                    available eXist-db resources.</para>
+            </listitem>
+        </orderedlist>
+        <para>Resources already controlled by JACMS get new versions as follows:</para>
+        <orderedlist>
+            <listitem>
+                <para>An XML document is checked out (there is a check-out/in flag, a
+                        <code>@status</code> attribute, on the <code>version</code> element) and
+                    edited. For non-XML resources, the editing happens outside JACMS. Once done, the
+                    resource is uploaded and checked in<footnote>
+                        <para>There needs to be a UI control in the XForm to trigger the upload from
+                            the right resource in JACMS, but no such thing exists at the time of
+                            this writing.</para>
+                    </footnote>.</para>
+            </listitem>
+            <listitem>
+                <para>When the XML is checked in again, a function is triggered to generate a new
+                        <code>version</code> element. By default, this essentially runs an XSLT that
+                    adds the new <code>version</code> as a following sibling in the VML; this is
+                    still a rok in progress.</para>
+                <para>A checked-in XML may be bumped up to a higher-level <code>version</code>, from
+                    a work in progress (e.g. 1.2.3.4) to the next approved version (e.g. 1.2.4).
+                    This is a workflow process, not a simple check-in by the author.</para>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section>
+        <title>In Closing</title>
+        <para>JACMS, as mentioned, is very much a work in progress, so if the paper sounds a bit
+            vague or even contradictory in places, it probably is. The final version of this paper
+            will hopefully not have those particular problems.</para>
+        <para>Here are the next few steps (some of which may be done by the time you read
+            this):</para>
+        <itemizedlist>
+            <listitem>
+                <para>Add the missing functions and transforms to manipulate version
+                    progression.</para>
+            </listitem>
+            <listitem>
+                <para>Finish the various XForms required to display resources and their versions;
+                    what I have at the time of this writing are tests and drafts.</para>
+            </listitem>
+            <listitem>
+                <para>Check-out/Check-in functionality</para>
+            </listitem>
+            <listitem>
+                <para>Etc.</para>
+            </listitem>
+        </itemizedlist>
+        <para>But also, make the JACMS repository public.</para>
+        <para>Lastly, I'd like to thank my friends Charaf Eddine, Joe Crowther, Adam Retter, and
+            Geert Bormans, all of whom have contributed ideas, support, and encouragement.</para>
+    </section>
+    <bibliography>
+        <title>Bibliography</title>
+        <bibliomixed xreflabel="Multilevel Versioning" xml:id="vml"><quote>Multilevel
+                Versioning</quote> [online, fetched on 2 April 2025] <link
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    xlink:href="https://doi.org/10.4242/BalisageVol13.Nordstrom01"/></bibliomixed>
+        <bibliomixed xreflabel="The Dream of a CMS" xml:id="cms-dream"><quote>The Dream of a
+                CMS</quote> [online, fetched on 2 April 2025] <link
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="https://doi.org/10.4242/BalisageVol28.Nordstrom01"/></bibliomixed>
+        <bibliomixed xml:id="vml-github"><quote>Version Markup Language (VML)</quote> [Github
+            repository fetched on 6 April 2025] <link xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="https://github.com/sgmlguru/vml"/></bibliomixed>
+        <bibliomixed xml:id="github-versioning-module"><quote>Versioning Module for eXist-db</quote>
+            [Github repository fetched on 9 April 2025] <link
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="https://github.com/eXist-db/xquery-versioning-module"/></bibliomixed>
+    </bibliography>
+</article>

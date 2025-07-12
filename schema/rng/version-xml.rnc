@@ -12,6 +12,8 @@ status.att = attribute status { text }
 
 lang.att = attribute xml:lang { text }
 
+string.att = attribute string { text }
+
 # Simple Xlink attributes
 xlink.basic.att =
   [ a:defaultValue = "simple" ] attribute xlink:type { "simple" }?,
@@ -49,7 +51,7 @@ base = element base { base.attlist, text }
 base.attlist = id.att?
 
 version = element version { version.attlist, metadata*, rev, file*, version* }
-version.attlist &= status.att?, id.att?
+version.attlist &= status.att?, id.att?, string.att?
 
 file = element file { file.attlist, metadata?, url? }
 file.attlist = id.att?
